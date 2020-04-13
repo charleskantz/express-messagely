@@ -1,8 +1,14 @@
+const User = require("../models/user")
+
+const router = new express.Router();
+
 /** POST /login - login: {username, password} => {token}
  *
  * Make sure to update their last-login!
  *
  **/
+
+
 
 
 /** POST /register - register user: registers, logs in, and returns token.
@@ -11,3 +17,5 @@
  *
  *  Make sure to update their last-login!
  */
+
+ router.
