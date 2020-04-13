@@ -1,55 +1,67 @@
 /** User class for message.ly */
 const bcrypt = require("bcrypt");
-
-const BCRYPT_WORK_FACTOR = 5;
+const { BCRYPT_WORK_FACTOR } = require('../config');
+const moment = require("moment-timezone");
+const db = require('../db')
 
 
 /** User of the site. */
-
 class User {
 
   /** register new user -- returns
    *    {username, password, first_name, last_name, phone}
    */
   static async register( {username, password, first_name, last_name, phone} ) {
-    try {
-      const hashedPassword = await bcrypt.hash(
-        password, BCRYPT_WORK_FACTOR);
-  
-      const results = await db.query(
-        `INSERT INTO users (username, password, first_name, last_name, phone)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING username, password, first_name, last_name, phone`,
-        [username, hashedPassword, first_name, last_name, phone]
-      );
-      return results.rows[0];
-    } catch (err) {
-      return next(err);
-    }
+    const hashedPassword = await bcrypt.hash(
+      password, BCRYPT_WORK_FACTOR);
+
+    let join_at = moment().format();
+    let last_login = moment.tz().format();
+
+    const results = await db.query(
+      `INSERT INTO users (
+        username,
+        password,
+        first_name,
+        last_name,
+        phone,
+        join_at,
+        last_login_at
+        )
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING username, password, first_name, last_name, phone`,
+      [username, hashedPassword, first_name, last_name, phone, join_at, last_login]
+    );
+    return results.rows[0];
   }
 
   /** Authenticate: is this username/password valid? Returns boolean. */
   static async authenticate(username, password) {
-    try {
-      const result = await db.query(
-        `SELECT password
-        FROM users
-        WHERE username = $1`,
-        [username]
-      );
-      const user = result.rows[0]
-      if (user) {
-        return await bcrypt.compare(password, user.password) === true;
-      }
-      throw new ExpressError("Invalid user/password", 400);
-    } catch (err) {
-      return next(err);
+    const result = await db.query(
+      `SELECT password
+      FROM users
+      WHERE username = $1`,
+      [username]
+    );
+    const user = result.rows[0];
+    if (user) {
+      return await bcrypt.compare(password, user.password) === true;
+      
+    } else {
+      return false;
     }
   }
 
   /** Update last_login_at for user */
   static async updateLoginTimestamp(username) {
-
+    const last_login = moment.tz().format();
+    await db.query(
+      `UPDATE users
+       SET last_login_at = $2
+       WHERE username = $1
+      `,
+      [username, last_login]
+    );
   }
 
 
@@ -90,6 +102,5 @@ class User {
 
   static async messagesTo(username) { }
 }
-
 
 module.exports = User;
