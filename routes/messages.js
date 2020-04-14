@@ -1,9 +1,7 @@
 const express = require('express');
 const Message = require("../models/message");
-const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require('../config');
 const ExpressError = require('../expressError')
-const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth')
+const { ensureLoggedIn } = require('../middleware/auth')
 
 const router = new express.Router();
 
