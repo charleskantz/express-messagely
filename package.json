@@ -23,5 +23,13 @@
     "supertest": "^4.0.2"
   },
   "keywords": [],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/charleskantz/express-messagely.git"
+  },
+  "bugs": {
+    "url": "https://github.com/charleskantz/express-messagely/issues"
+  },
+  "homepage": "https://github.com/charleskantz/express-messagely#readme",
   "description": ""
 }

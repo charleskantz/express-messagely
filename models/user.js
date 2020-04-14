@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const { BCRYPT_WORK_FACTOR } = require('../config');
 const moment = require("moment-timezone");
 const db = require('../db')
+const ExpressError = ("../expressError")
 
 
 /** User of the site. */
@@ -68,7 +69,19 @@ class User {
   /** All: basic info on all users:
    * [{username, first_name, last_name, phone}, ...] */
   static async all() {
-
+    const result = await db.query(
+    `SELECT 
+      username, 
+      first_name, 
+      last_name, 
+      phone
+    FROM users`
+    );
+    if (result.rows.length > 0) {
+      return result.rows;
+    } else {
+      throw new ExpressError('no users found', 404)
+    }
   }
 
   /** Get: get user by username
@@ -80,7 +93,24 @@ class User {
    *          join_at,
    *          last_login_at } */
 
-  static async get(username) { }
+  static async get(username) {
+    const result = await db.query(
+    `SELECT 
+      username, 
+      first_name,  
+      last_name,
+      phone, 
+      join_at, 
+      last_login_at
+    FROM users
+    WHERE username = $1`, [username]
+    );
+    if (result.rows.length > 0) {
+      return result.rows[0];
+    } else {
+      throw new ExpressError(`${username} does not exist`, 404)
+    }
+  }
 
   /** Return messages from this user.
    *
@@ -90,7 +120,43 @@ class User {
    *   {username, first_name, last_name, phone}
    */
 
-  static async messagesFrom(username) { }
+  static async messagesFrom(username) { 
+    const result = await db.query(
+      `SELECT 
+        messages.id,
+        messages.to_username, 
+        messages.body,
+        messages.sent_at,
+        messages.read_at,
+        users.first_name, 
+        users.last_name, 
+        users.phone
+      FROM messages
+      JOIN users
+      ON messages.to_username = users.username
+      WHERE messages.from_username = $1`, [username]
+    );
+
+    /*{messages: [{id,
+ *                 body,
+ *                 sent_at,
+ *                 read_at,
+ *                 from_user: {username, first_name, last_name, phone}}, ...]}*/
+
+    let response = {};
+    response.messages = [];
+    for(let message of result.rows){
+      response.messages.push({id: message.id,
+                              body: message.body,
+                              sent_at: message.sent_at,
+                              read_at: message.read_at,
+                              from_user: {username: message.username, 
+                                          first_name: message.first_name, 
+                                          last_name: message.last_name, 
+                                          phone: message.phone}});
+    }
+    return response;
+  }
 
   /** Return messages to this user.
    *

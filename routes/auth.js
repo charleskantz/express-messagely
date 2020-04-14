@@ -1,8 +1,7 @@
 const express = require('express');
-const User = require("../models/user")
+const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-const { SECRET_KEY } = require('../config')
-
+const { SECRET_KEY } = require('../config');
 const router = new express.Router();
 
 /** POST /login - login: {username, password} => {token}
