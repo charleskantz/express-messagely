@@ -1,5 +1,6 @@
 const express = require('express');
 const User = require("../models/user");
+const { ensureLoggedIn, ensureCorrectUser } = require('../middleware/auth')
 const router = new express.Router();
 
 /** GET / - get list of users.
@@ -7,7 +8,7 @@ const router = new express.Router();
  * => {users: [{username, first_name, last_name, phone}, ...]}
  *
  **/
-router.get('/', async function(req, res, next){
+router.get('/', ensureLoggedIn, async function(req, res, next){
   try{
     const user = await User.all();
     return res.json(user);
@@ -25,10 +26,10 @@ router.get('/', async function(req, res, next){
  *
  **/
 
-router.get('/:username', async function(req, res, next){
+router.get('/:username', ensureCorrectUser, async function(req, res, next){
   try{
-    const user = await User.get(username);
-    return res.json(user);
+    const user = await User.get(req.params.username);
+    return res.json({ user: user});
   }catch(err){
     return next(err);
   }
@@ -44,7 +45,10 @@ router.get('/:username', async function(req, res, next){
  *                 from_user: {username, first_name, last_name, phone}}, ...]}
  *
  **/
-
+router.get('/:username/to', ensureCorrectUser, async function(req, res, next){
+  const results = await User.messagesTo(req.params.username)
+  return res.json({messages: results});
+})
 
 
 /** GET /:username/from - get messages from user
@@ -57,8 +61,9 @@ router.get('/:username', async function(req, res, next){
  *
  **/
 
-router.get('/:username/from', async function(req, res, next){
-  return res.json(await User.messagesFrom(req.params.username));
+router.get('/:username/from', ensureCorrectUser, async function(req, res, next){
+const results = await User.messagesFrom(req.params.username)
+  return res.json({messages: results});
 })
 
 module.exports = router;

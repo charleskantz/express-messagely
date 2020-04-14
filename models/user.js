@@ -105,11 +105,11 @@ class User {
     FROM users
     WHERE username = $1`, [username]
     );
-    if (result.rows.length > 0) {
+    // if (!result.rows) {
       return result.rows[0];
-    } else {
-      throw new ExpressError(`${username} does not exist`, 404)
-    }
+    // } else {
+    //   throw new ExpressError(`${username} does not exist`, 404);
+    // }
   }
 
   /** Return messages from this user.
@@ -143,19 +143,19 @@ class User {
  *                 read_at,
  *                 from_user: {username, first_name, last_name, phone}}, ...]}*/
 
-    let response = {};
-    response.messages = [];
+    let messages = [];
+
     for(let message of result.rows){
-      response.messages.push({id: message.id,
+      messages.push({id: message.id,
                               body: message.body,
                               sent_at: message.sent_at,
                               read_at: message.read_at,
-                              from_user: {username: message.username, 
+                              to_user: {username: message.to_username, 
                                           first_name: message.first_name, 
                                           last_name: message.last_name, 
                                           phone: message.phone}});
     }
-    return response;
+    return messages;
   }
 
   /** Return messages to this user.
@@ -166,7 +166,37 @@ class User {
    *   {id, first_name, last_name, phone}
    */
 
-  static async messagesTo(username) { }
+  static async messagesTo(username) {
+    const result = await db.query(
+      `SELECT 
+        messages.id,
+        messages.from_username, 
+        messages.body,
+        messages.sent_at,
+        messages.read_at,
+        users.first_name, 
+        users.last_name, 
+        users.phone
+      FROM messages
+      JOIN users
+      ON messages.from_username = users.username
+      WHERE messages.to_username = $1`, [username]
+    );
+
+    let messages = [];
+
+    for(let message of result.rows){
+      messages.push({id: message.id,
+                              body: message.body,
+                              sent_at: message.sent_at,
+                              read_at: message.read_at,
+                              from_user: {username: message.from_username, 
+                                          first_name: message.first_name, 
+                                          last_name: message.last_name, 
+                                          phone: message.phone}});
+    }
+    return messages;
+  }
 }
 
 module.exports = User;
