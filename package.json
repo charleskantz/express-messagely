@@ -17,7 +17,7 @@
     "express-cors": "0.0.3",
     "jsonwebtoken": "^8.3.0",
     "moment": "^2.24.0",
-    "moment-timezone": "^0.5.28",
+    "moment-timezone": "^0.5.35",
     "nodemon": "^2.0.3",
     "pg": "^7.5.0",
     "supertest": "^4.0.2"
